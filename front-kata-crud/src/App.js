@@ -62,13 +62,16 @@ const Form = () => {
     });
   }
 
-  return <form ref={formRef}>
-    <input type="text" name='name' defaultValue={item.name} onChange={(event) => {
-      setState({ ...state, name:event.target.value })
-    }}/>
-    {item.id && <button onClick={onEdit}>Actualizar</button>}
-    {!item.id && <button onClick={onAdd}>Agregar</button>}    
-  </form>
+  return <div className='container'>
+    <form ref={formRef}>
+    <label for="taskIn" className="form-label mr-2">ToDo task:</label>
+      <input type="text" name='name' id='taskIn' defaultValue={item.name} onChange={(event) => {
+        setState({ ...state, name:event.target.value })
+      }}/>
+      {item.id && <button onClick={onEdit}>Actualizar</button>}
+      {!item.id && <button onClick={onAdd}>Agregar</button>}    
+    </form>
+  </div> 
 }
 
 const TodoList = () => {
@@ -83,12 +86,21 @@ const TodoList = () => {
     })
   }, [state.list.length, dispatch]);
 
+  const onDelete = (id) => {
+    fetch(HOST_API+"/todo/"+id, {
+      method: "DELETE"
+    })
+    .then((list) => {
+      dispatch({ type: "delete-item", id})
+    })
+  };
+
   const onEdit = (todo) => {
     dispatch({ type: "edit-item", item: todo})
   }
 
-  return <div>
-    <table>
+  return <div className='container'>
+    <table className='table table-striped'>
       <thead>
         <tr>
           <td>ID</td>
@@ -103,7 +115,8 @@ const TodoList = () => {
               <td>{todo.id}</td>
               <td>{todo.name}</td>
               <td>{todo.isCompleted === true ? "SI" : "NO"}</td>
-              <td><button onClick={() => onEdit(todo)}>Editar</button></td>
+              <td><button className='btn btn-danger' onClick={() => onDelete(todo.id)}>Eliminar</button></td>
+              <td><button className='btn btn-warning' onClick={() => onEdit(todo)}>Editar</button></td>
             </tr>
           })
         }
@@ -122,6 +135,11 @@ function reducer(state, action) {
         return item;
       });
       return { ...state, list: listUpdateEdit, item: {} }
+    case 'delete-item':
+      const listUpdate = state.list.filter((item) => {
+        return item.id !== action.id;
+      });
+      return { ...state, list: listUpdate }
     case 'update-list':
       return { ...state, list: action.list }
     case 'edit-item':
